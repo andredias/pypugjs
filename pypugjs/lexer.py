@@ -449,7 +449,7 @@ class Lexer(object):
             flags, name = captures[1:]
             tok = self.tok('code', name)
             tok.escape = flags.startswith('=')
-            #print captures
+            # print captures
             tok.buffer = '=' in flags
             # print tok.buffer
             return tok
@@ -482,7 +482,9 @@ class Lexer(object):
                 return states[-1]
 
             def interpolate(attr):
-                attr, num = self.RE_ATTR_INTERPOLATE.subn(lambda matchobj: '%s+"{}".format(%s)+%s' % (ns.quote, matchobj.group(1), ns.quote), attr)
+                attr, num = self.RE_ATTR_INTERPOLATE.subn(
+                    lambda matchobj: '%s+"{}".format(%s)+%s' %
+                    (ns.quote, matchobj.group(1), ns.quote), attr)
                 return attr, (num > 0)
 
             self.consume(index + 1)
@@ -491,6 +493,7 @@ class Lexer(object):
             tok.static_attrs = set()
             str_nums = list(map(str, range(10)))
             # print '------'
+
             def parse(c):
                 real = c
                 if colons and ':' == c:
@@ -675,8 +678,7 @@ class Lexer(object):
             or self.colon() \
             or self.string() \
             or self.text()
-
-            ##or self._while() \
+            # or self._while() \
 
 
 class InlineLexer(Lexer):

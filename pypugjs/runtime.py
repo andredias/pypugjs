@@ -10,6 +10,7 @@ except ImportError:
     import UserDict
     MappingType = (UserDict.UserDict, UserDict.DictMixin, dict)
 
+
 def flatten(l, ltypes=(list, tuple)):
     ltype = type(l)
     l = list(l)
@@ -24,6 +25,7 @@ def flatten(l, ltypes=(list, tuple)):
                 l[i:i + 1] = l[i]
         i += 1
     return ltype(l)
+
 
 def escape(s):
     """Convert the characters &, <, >, ' and " in string s to HTML-safe
@@ -47,19 +49,21 @@ def escape(s):
         .replace('"', '&#34;')
     )
 
-def attrs (attrs=[],terse=False, undefined=None):
+
+def attrs(attrs=[], terse=False, undefined=None):
     buf = []
     if bool(attrs):
         buf.append(u'')
-        for k,v in attrs:
+        for k, v in attrs:
             if undefined is not None and isinstance(v, undefined):
                 continue
-            if v!=None and (v!=False or type(v)!=bool):
-                if k=='class' and isinstance(v, (list, tuple)):
-                    v = u' '.join(map(str,flatten(v)))
-                t = v==True and type(v)==bool
-                if t and not terse: v=k
-                buf.append(u'%s'%k if terse and t else u'%s="%s"'%(k,escape(v)))
+            if v is not None and (v != False or not isinstance(v, bool)):
+                if k == 'class' and isinstance(v, (list, tuple)):
+                    v = u' '.join(map(str, flatten(v)))
+                t = v == True and isinstance(v, bool)
+                if t and not terse:
+                    v = k
+                buf.append(u'%s' % k if terse and t else u'%s="%s"' % (k, escape(v)))
     return u' '.join(buf)
 
 

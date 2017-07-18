@@ -6,7 +6,8 @@ import pypugjs
 from pypugjs.runtime import is_mapping, iteration, escape
 import six
 import os
-import operator 
+import operator
+
 
 def process_param(key, value, terse=False):
     if terse:
@@ -39,6 +40,7 @@ class Compiler(pypugjs.compiler.Compiler):
     local_context = {}
     mixins = {}
     useRuntime = True
+
     def _do_eval(self, value):
         if isinstance(value, six.string_types):
             value = value.encode('utf-8')
@@ -59,6 +61,7 @@ class Compiler(pypugjs.compiler.Compiler):
 
     def _make_mixin(self, mixin):
         arg_names = [arg.strip() for arg in mixin.args.split(",")]
+
         def _mixin(self, args):
             if args:
                 arg_values = self._do_eval(args)
@@ -135,7 +138,7 @@ class Compiler(pypugjs.compiler.Compiler):
                 self.visit(each.block)
 
     def attributes(self, attrs):
-        return " ".join(['''%s="%s"''' % (k,v) for (k,v) in attrs.items()])
+        return " ".join(['''%s="%s"''' % (k, v) for (k, v) in attrs.items()])
 
     def visitDynamicAttributes(self, attrs):
         classes = []
@@ -151,15 +154,17 @@ class Compiler(pypugjs.compiler.Compiler):
                 value = self._get_value(attr)
                 if value is True:
                     params.append((attr['name'], True))
-                elif value not in (None,False):
+                elif value not in (None, False):
                     params.append((attr['name'], escape(value)))
         if classes:
             classes = [six.text_type(c) for c in classes]
             params.append(('class', " ".join(classes)))
         if params:
-            self.buf.append(" "+" ".join([process_param(k, v, self.terse) for (k,v) in params]))
+            self.buf.append(" " + " ".join([process_param(k, v, self.terse) for (k, v) in params]))
+
 
 HTMLCompiler = Compiler
+
 
 def process_pugjs(src):
     parser = pypugjs.parser.Parser(src)

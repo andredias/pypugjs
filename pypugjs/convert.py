@@ -6,6 +6,7 @@ from optparse import OptionParser
 from pypugjs.utils import process
 import os
 
+
 def convert_file():
     support_compilers_list = ['django', 'jinja', 'underscore', 'mako', 'tornado', 'html']
     available_compilers = {}
@@ -20,16 +21,16 @@ def convert_file():
     usage = "usage: %prog [options] [file [output]]"
     parser = OptionParser(usage)
     parser.add_option("-o", "--output", dest="output",
-                    help="Write output to FILE", metavar="FILE")
+                      help="Write output to FILE", metavar="FILE")
     # use a default compiler here to sidestep making a particular
     # compiler absolutely necessary (ex. django)
     default_compiler = sorted(available_compilers.keys())[0]
     parser.add_option("-c", "--compiler", dest="compiler",
-                    choices=list(available_compilers.keys()),
-                    default=default_compiler,
-                    type="choice",
-                    help=("COMPILER must be one of %s, default is %s" %
-                          (', '.join(list(available_compilers.keys())), default_compiler)))
+                      choices=list(available_compilers.keys()),
+                      default=default_compiler,
+                      type="choice",
+                      help=("COMPILER must be one of %s, default is %s" %
+                            (', '.join(list(available_compilers.keys())), default_compiler)))
     parser.add_option("-e", "--ext", dest="extension",
                       help="Set import/extends default file extension",
                       metavar="FILE")
@@ -65,6 +66,7 @@ def convert_file():
             codecs.getwriter('utf-8')(sys.stdout).write(output)
     else:
         raise Exception('You must have %s installed!' % compiler)
+
 
 if __name__ == '__main__':
     convert_file()

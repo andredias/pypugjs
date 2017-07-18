@@ -11,53 +11,57 @@ from pypugjs.utils import process
 ATTRS_FUNC = '__pypugjs_attrs'
 ITER_FUNC = '__pypugjs_iter'
 
+
 def attrs(attrs, terse=False):
     return Markup(_attrs(attrs, terse, Undefined))
 
+
 class Compiler(_Compiler):
 
-    def visitCodeBlock(self,block):
+    def visitCodeBlock(self, block):
         if self.mixing > 0:
-          if self.mixing > 1:
-            caller_name = '__pypugjs_caller_%d' % self.mixing
-          else:
-            caller_name = 'caller'
-          self.buffer('{%% if %s %%}%s %s() %s{%% endif %%}' % (caller_name, self.variable_start_string,
-              caller_name, self.variable_end_string))
+            if self.mixing > 1:
+                caller_name = '__pypugjs_caller_%d' % self.mixing
+            else:
+                caller_name = 'caller'
+            self.buffer('{%% if %s %%}%s %s() %s{%% endif %%}' % (caller_name, self.variable_start_string,
+                                                                  caller_name, self.variable_end_string))
         else:
-          self.buffer('{%% block %s %%}'%block.name)
-          if block.mode=='append': self.buffer('%ssuper()%s' % (self.variable_start_string, self.variable_end_string))
-          self.visitBlock(block)
-          if block.mode=='prepend': self.buffer('%ssuper()%s' % (self.variable_start_string, self.variable_end_string))
-          self.buffer('{% endblock %}')
+            self.buffer('{%% block %s %%}' % block.name)
+            if block.mode == 'append':
+                self.buffer('%ssuper()%s' % (self.variable_start_string, self.variable_end_string))
+            self.visitBlock(block)
+            if block.mode == 'prepend':
+                self.buffer('%ssuper()%s' % (self.variable_start_string, self.variable_end_string))
+            self.buffer('{% endblock %}')
 
-    def visitMixin(self,mixin):
+    def visitMixin(self, mixin):
         self.mixing += 1
         if not mixin.call:
-          self.buffer('{%% macro %s(%s) %%}'%(mixin.name,mixin.args))
-          self.visitBlock(mixin.block)
-          self.buffer('{% endmacro %}')
+            self.buffer('{%% macro %s(%s) %%}' % (mixin.name, mixin.args))
+            self.visitBlock(mixin.block)
+            self.buffer('{% endmacro %}')
         elif mixin.block:
-          if self.mixing > 1:
-            self.buffer('{%% set __pypugjs_caller_%d=caller %%}' % self.mixing)
-          self.buffer('{%% call %s(%s) %%}'%(mixin.name,mixin.args))
-          self.visitBlock(mixin.block)
-          self.buffer('{% endcall %}')
+            if self.mixing > 1:
+                self.buffer('{%% set __pypugjs_caller_%d=caller %%}' % self.mixing)
+            self.buffer('{%% call %s(%s) %%}' % (mixin.name, mixin.args))
+            self.visitBlock(mixin.block)
+            self.buffer('{% endcall %}')
         else:
-          self.buffer('%s%s(%s)%s' % (self.variable_start_string, mixin.name, mixin.args, self.variable_end_string))
+            self.buffer('%s%s(%s)%s' % (self.variable_start_string, mixin.name, mixin.args, self.variable_end_string))
         self.mixing -= 1
 
-    def visitAssignment(self,assignment):
-        self.buffer('{%% set %s = %s %%}'%(assignment.name,assignment.val))
+    def visitAssignment(self, assignment):
+        self.buffer('{%% set %s = %s %%}' % (assignment.name, assignment.val))
 
-    def visitCode(self,code):
+    def visitCode(self, code):
         if code.buffer:
             val = code.val.lstrip()
             val = self.var_processor(val)
-            self.buf.append('%s%s%s%s' % (self.variable_start_string, val,'|escape' if code.escape else '',
-                self.variable_end_string))
+            self.buf.append('%s%s%s%s' % (self.variable_start_string, val, '|escape' if code.escape else '',
+                                          self.variable_end_string))
         else:
-            self.buf.append('{%% %s %%}'%code.val)
+            self.buf.append('{%% %s %%}' % code.val)
 
         if code.block:
             # if not code.buffer: self.buf.append('{')
@@ -65,17 +69,17 @@ class Compiler(_Compiler):
             # if not code.buffer: self.buf.append('}')
 
             if not code.buffer:
-              codeTag = code.val.strip().split(' ',1)[0]
-              if codeTag in self.autocloseCode:
-                  self.buf.append('{%% end%s %%}'%codeTag)
+                codeTag = code.val.strip().split(' ', 1)[0]
+                if codeTag in self.autocloseCode:
+                    self.buf.append('{%% end%s %%}' % codeTag)
 
-    def visitEach(self,each):
-        self.buf.append("{%% for %s in %s(%s,%d) %%}"%(','.join(each.keys),ITER_FUNC,each.obj,len(each.keys)))
+    def visitEach(self, each):
+        self.buf.append("{%% for %s in %s(%s,%d) %%}" % (','.join(each.keys), ITER_FUNC, each.obj, len(each.keys)))
         self.visit(each.block)
         self.buf.append('{% endfor %}')
 
-    def attributes(self,attrs):
-        return "%s%s(%s)%s" % (self.variable_start_string, ATTRS_FUNC,attrs, self.variable_end_string)
+    def attributes(self, attrs):
+        return "%s%s(%s)%s" % (self.variable_start_string, ATTRS_FUNC, attrs, self.variable_end_string)
 
 
 class PyPugJSExtension(Extension):
@@ -94,6 +98,7 @@ class PyPugJSExtension(Extension):
     #     raise pt.exc_type, pt.exc_value, tb
     options = {}
     file_extensions = '.pug'
+
     def __init__(self, environment):
         super(PyPugJSExtension, self).__init__(environment)
 
@@ -113,6 +118,6 @@ class PyPugJSExtension(Extension):
 
     def preprocess(self, source, name, filename=None):
         if (not name or
-           (name and not os.path.splitext(name)[1] in self.file_extensions)):
+                (name and not os.path.splitext(name)[1] in self.file_extensions)):
             return source
-        return process(source,filename=name,compiler=Compiler,**self.options)
+        return process(source, filename=name, compiler=Compiler, **self.options)

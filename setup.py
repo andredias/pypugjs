@@ -1,4 +1,4 @@
-from setuptools import setup,find_packages
+from setuptools import setup, find_packages
 
 setup(name='pypugjs',
       version='4.2.2',
@@ -13,14 +13,14 @@ setup(name='pypugjs',
       url='http://github.com/matannoam/pypugjs',
       license='MIT',
       entry_points={
-          'console_scripts' : ['pypugjs = pypugjs.convert:convert_file',]
+          'console_scripts': ['pypugjs = pypugjs.convert:convert_file', ]
       },
       install_requires=['six'],
       tests_require=[
-            'nose',
-            'django',
-            'jinja2',
-            'tornado',
-            'pyramid >= 1.4, <= 1.4.99',
-            'mako',
+          'nose',
+          'django',
+          'jinja2',
+          'tornado',
+          'pyramid >= 1.4, <= 1.4.99',
+          'mako',
       ])

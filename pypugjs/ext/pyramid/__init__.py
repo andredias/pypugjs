@@ -13,6 +13,7 @@ class PyPugJSRenderer(object):
     """
     The PugJS renderer
     """
+
     def __init__(self, info):
         info.settings['mako.preprocessor'] = preprocessor
         self.makoRenderer = mako_templating.renderer_factory(info)
