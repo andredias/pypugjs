@@ -13,7 +13,7 @@ def attrs(attrs, terse=False):
 
 
 class Compiler(_Compiler):
-    useRuntime = True
+    use_runtime = True
 
     def compile_top(self):
         return '# -*- coding: utf-8 -*-\n<%%! from pypugjs.runtime import attrs as %s, iteration as %s\nfrom mako.runtime import Undefined %%>' % (
@@ -22,67 +22,67 @@ class Compiler(_Compiler):
     def interpolate(self, text, escape=True):
         return self._interpolate(text, lambda x: '${%s}' % x)
 
-    def visitCodeBlock(self, block):
+    def visit_codeblock(self, block):
         if self.mixing > 0:
             self.buffer('${caller.body() if caller else ""}')
         else:
             self.buffer('<%%block name="%s">' % block.name)
             if block.mode == 'append':
                 self.buffer('${parent.%s()}' % block.name)
-            self.visitBlock(block)
+            self.visit_block(block)
             if block.mode == 'prepend':
                 self.buffer('${parent.%s()}' % block.name)
             self.buffer('</%block>')
 
-    def visitMixin(self, mixin):
+    def visit_mixin(self, mixin):
         self.mixing += 1
         if not mixin.call:
             self.buffer('<%%def name="%s(%s)">' % (mixin.name, mixin.args))
-            self.visitBlock(mixin.block)
+            self.visit_block(mixin.block)
             self.buffer('</%def>')
         elif mixin.block:
             self.buffer('<%%call expr="%s(%s)">' % (mixin.name, mixin.args))
-            self.visitBlock(mixin.block)
+            self.visit_block(mixin.block)
             self.buffer('</%call>')
         else:
             self.buffer('${%s(%s)}' % (mixin.name, mixin.args))
         self.mixing -= 1
 
-    def visitAssignment(self, assignment):
+    def visit_assignment(self, assignment):
         self.buffer('<%% %s = %s %%>' % (assignment.name, assignment.val))
 
-    def visitExtends(self, node):
+    def visit_extends(self, node):
         path = self.format_path(node.path)
         self.buffer('<%%inherit file="%s"/>' % (path))
 
-    def visitInclude(self, node):
+    def visit_include(self, node):
         path = self.format_path(node.path)
         self.buffer('<%%include file="%s"/>' % (path))
         self.buffer('<%%namespace file="%s" import="*"/>' % (path))
 
-    def visitConditional(self, conditional):
-        TYPE_CODE = {
+    def visit_conditional(self, conditional):
+        type_code = {
             'if': lambda x: 'if %s' % x,
             'unless': lambda x: 'if not %s' % x,
             'elif': lambda x: 'elif %s' % x,
             'else': lambda x: 'else'
         }
-        self.buf.append('\\\n%% %s:\n' % TYPE_CODE[conditional.type](conditional.sentence))
+        self.buf.append('\\\n%% %s:\n' % type_code[conditional.type](conditional.sentence))
         if conditional.block:
             self.visit(conditional.block)
             for next in conditional.next:
-                self.visitConditional(next)
+                self.visit_conditional(next)
         if conditional.type in ['if', 'unless']:
             self.buf.append('\\\n% endif\n')
 
-    def visitVar(self, var, escape=False):
+    def visit_var(self, var, escape=False):
         return '${%s%s}' % (var, '| h' if escape else '| n')
 
-    def visitCode(self, code):
+    def visit_code(self, code):
         if code.buffer:
             val = code.val.lstrip()
             val = self.var_processor(val)
-            self.buf.append(self.visitVar(val, code.escape))
+            self.buf.append(self.visit_var(val, code.escape))
         else:
             self.buf.append('<%% %s %%>' % code.val)
 
@@ -92,11 +92,11 @@ class Compiler(_Compiler):
             # if not code.buffer: self.buf.append('}')
 
             if not code.buffer:
-                codeTag = code.val.strip().split(' ', 1)[0]
-                if codeTag in self.autocloseCode:
-                    self.buf.append('</%%%s>' % codeTag)
+                code_tag = code.val.strip().split(' ', 1)[0]
+                if code_tag in self.autoclose_code:
+                    self.buf.append('</%%%s>' % code_tag)
 
-    def visitEach(self, each):
+    def visit_each(self, each):
         self.buf.append('\\\n%% for %s in %s(%s,%d):\n' % (','.join(each.keys), ITER_FUNC, each.obj, len(each.keys)))
         self.visit(each.block)
         self.buf.append('\\\n% endfor\n')

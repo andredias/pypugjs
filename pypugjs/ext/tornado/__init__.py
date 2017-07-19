@@ -11,19 +11,19 @@ ITER_FUNC = '__pypugjs_iter'
 
 class Compiler(_Compiler):
 
-    def visitCodeBlock(self, block):
+    def visit_codeblock(self, block):
         self.buffer('{%% block %s %%}' % block.name)
         if block.mode == 'append':
             self.buffer('{% raw super() %}')
-        self.visitBlock(block)
+        self.visit_block(block)
         if block.mode == 'prepend':
             self.buffer('{% raw super() %}')
         self.buffer('{% end %}')
 
-    # def visitMixin(self,mixin):
+    # def visit_mixin(self,mixin):
     #     if mixin.block:
     #       self.buffer('{%% macro %s(%s) %%}'%(mixin.name,mixin.args))
-    #       self.visitBlock(mixin.block)
+    #       self.visit_block(mixin.block)
     #       self.buffer('{% end %}')
     #     else:
     #       self.buffer('{%% raw %s(%s)} %%}'%(mixin.name,mixin.args))
@@ -31,13 +31,13 @@ class Compiler(_Compiler):
     def interpolate(self, text, escape=True):
         return self._interpolate(text, lambda x: '{%% raw %s(%s) %%}' % (ESCAPE_FUNC, x))
 
-    def visitMixin(self, mixin):
+    def visit_mixin(self, mixin):
         raise CurrentlyNotSupported('mixin')
 
-    def visitAssignment(self, assignment):
+    def visit_assignment(self, assignment):
         self.buffer('{%% set %s = %s %%}' % (assignment.name, assignment.val))
 
-    def visitCode(self, code):
+    def visit_code(self, code):
         if code.buffer:
             val = code.val.lstrip()
             val = self.var_processor(val)
@@ -54,27 +54,27 @@ class Compiler(_Compiler):
             # if not code.buffer: self.buf.append('}')
 
             if not code.buffer:
-                codeTag = code.val.strip().split(' ', 1)[0]
-                if codeTag in self.autocloseCode:
-                    self.buf.append('{%% end%s %%}' % codeTag)
+                code_tag = code.val.strip().split(' ', 1)[0]
+                if code_tag in self.autoclose_code:
+                    self.buf.append('{%% end%s %%}' % code_tag)
 
-    def visitEach(self, each):
+    def visit_each(self, each):
         self.buf.append('{%% for %s in %s(%s,%s) %%}' % (','.join(each.keys), ITER_FUNC, each.obj, len(each.keys)))
         self.visit(each.block)
         self.buf.append('{% end %}')
 
-    def visitConditional(self, conditional):
-        TYPE_CODE = {
+    def visit_conditional(self, conditional):
+        type_code = {
             'if': lambda x: 'if %s' % x,
             'unless': lambda x: 'if not %s' % x,
             'elif': lambda x: 'elif %s' % x,
             'else': lambda x: 'else'
         }
-        self.buf.append('{%% %s %%}' % TYPE_CODE[conditional.type](conditional.sentence))
+        self.buf.append('{%% %s %%}' % type_code[conditional.type](conditional.sentence))
         if conditional.block:
             self.visit(conditional.block)
             for next in conditional.next:
-                self.visitConditional(next)
+                self.visit_conditional(next)
         if conditional.type in ['if', 'unless']:
             self.buf.append('{% end %}')
 

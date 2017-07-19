@@ -16,29 +16,29 @@ class Compiler(object):
         'basic': '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML Basic 1.1//EN" "http://www.w3.org/TR/xhtml-basic/xhtml-basic11.dtd">',
         'mobile': '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.2//EN" "http://www.openmobilealliance.org/tech/DTD/xhtml-mobile12.dtd">'
     }
-    inlineTags = [
+    inline_tags = [
         'a', 'abbr', 'acronym', 'b', 'br', 'code', 'em', 'font', 'i', 'img', 'ins', 'kbd', 'map', 'samp',
         'small', 'span', 'strong', 'sub', 'sup', 'textarea'
     ]
-    selfClosing = ['meta', 'img', 'link', 'input', 'area', 'base', 'col', 'br', 'hr']
-    autocloseCode = 'if,for,block,filter,autoescape,with,trans,spaceless,comment,cache,macro,localize,compress,raw'.split(',')
+    self_closing = ['meta', 'img', 'link', 'input', 'area', 'base', 'col', 'br', 'hr']
+    autoclose_code = 'if,for,block,filter,autoescape,with,trans,spaceless,comment,cache,macro,localize,compress,raw'.split(',')
 
     filters = {}
 
     def __init__(self, node, **options):
         self.options = options
         self.node = node
-        self.hasCompiledDoctype = False
-        self.hasCompiledTag = False
+        self.has_compiled_doctype = False
+        self.has_compiled_tag = False
         self.pp = options.get('pretty', True)
-        self.debug = options.get('compileDebug', False) is not False
+        self.debug = options.get('compile_debug', False) is not False
         self.filters.update(options.get('filters', {}))
         self.doctypes.update(options.get('doctypes', {}))
         # self.var_processor = options.get('var_processor', lambda x: x)
-        self.selfClosing.extend(options.get('selfClosing', []))
-        self.autocloseCode.extend(options.get('autocloseCode', []))
-        self.inlineTags.extend(options.get('inlineTags', []))
-        self.useRuntime = options.get('useRuntime', True)
+        self.self_closing.extend(options.get('self_closing', []))
+        self.autoclose_code.extend(options.get('autoclose_code', []))
+        self.inline_tags.extend(options.get('inline_tags', []))
+        self.use_runtime = options.get('use_runtime', True)
         self.extension = options.get('extension', None) or '.pug'
         self.indents = 0
         self.doctype = None
@@ -48,7 +48,7 @@ class Compiler(object):
         self.variable_start_string = options.get("variable_start_string", "{{")
         self.variable_end_string = options.get("variable_end_string", "}}")
         if 'doctype' in self.options:
-            self.setDoctype(options['doctype'])
+            self.set_doctype(options['doctype'])
         self.instring = False
 
     def var_processor(self, var):
@@ -61,27 +61,27 @@ class Compiler(object):
 
     def compile(self):
         self.buf = [self.compile_top()]
-        self.lastBufferedIdx = -1
+        self.last_buffered_idx = -1
         self.visit(self.node)
         compiled = u''.join(self.buf)
         if isinstance(compiled, six.binary_type):
             compiled = six.text_type(compiled, 'utf8')
         return compiled
 
-    def setDoctype(self, name):
+    def set_doctype(self, name):
         self.doctype = self.doctypes.get(name or 'default',
                                          '<!DOCTYPE %s>' % name)
         self.terse = name in ['5', 'html']
         self.xml = self.doctype.startswith('<?xml')
 
     def buffer(self, str):
-        if self.lastBufferedIdx == len(self.buf):
-            self.lastBuffered += str
-            self.buf[self.lastBufferedIdx - 1] = self.lastBuffered
+        if self.last_buffered_idx == len(self.buf):
+            self.last_buffered += str
+            self.buf[self.last_buffered_idx - 1] = self.last_buffered
         else:
             self.buf.append(str)
-            self.lastBuffered = str
-            self.lastBufferedIdx = len(self.buf)
+            self.last_buffered = str
+            self.last_buffered_idx = len(self.buf)
 
     def visit(self, node, *args, **kwargs):
         # debug = self.debug
@@ -92,65 +92,65 @@ class Compiler(object):
         #     self.buf.pop()
         #     self.buf.pop()
 
-        self.visitNode(node, *args, **kwargs)
+        self.visit_node(node, *args, **kwargs)
         # if debug: self.buf.append('__pugjs.shift();')
 
-    def visitNode(self, node, *args, **kwargs):
+    def visit_node(self, node, *args, **kwargs):
         name = node.__class__.__name__
         if self.instring and name != 'Tag':
             self.buffer('\n')
             self.instring = False
-        return getattr(self, 'visit%s' % name)(node, *args, **kwargs)
+        return getattr(self, 'visit_%s' % name.lower())(node, *args, **kwargs)
 
-    def visitLiteral(self, node):
+    def visit_literal(self, node):
         self.buffer(node.str)
 
-    def visitBlock(self, block):
+    def visit_block(self, block):
         for node in block.nodes:
             self.visit(node)
 
-    def visitCodeBlock(self, block):
+    def visit_codeblock(self, block):
         self.buffer('{%% block %s %%}' % block.name)
         if block.mode == 'prepend':
             self.buffer('%ssuper()%s' % (self.variable_start_string,
                                          self.variable_end_string))
-        self.visitBlock(block)
+        self.visit_block(block)
         if block.mode == 'append':
             self.buffer('%ssuper()%s' % (self.variable_start_string,
                                          self.variable_end_string))
         self.buffer('{% endblock %}')
 
-    def visitDoctype(self, doctype=None):
+    def visit_doctype(self, doctype=None):
         if doctype and (doctype.val or not self.doctype):
-            self.setDoctype(doctype.val or 'default')
+            self.set_doctype(doctype.val or 'default')
 
         if self.doctype:
             self.buffer(self.doctype)
-        self.hasCompiledDoctype = True
+        self.has_compiled_doctype = True
 
-    def visitMixin(self, mixin):
+    def visit_mixin(self, mixin):
         if mixin.block:
             self.buffer('{%% macro %s(%s) %%}' % (mixin.name, mixin.args))
-            self.visitBlock(mixin.block)
+            self.visit_block(mixin.block)
             self.buffer('{% endmacro %}')
         else:
             self.buffer('%s%s(%s)%s' % (self.variable_start_string, mixin.name,
                                         mixin.args, self.variable_end_string))
 
-    def visitTag(self, tag):
+    def visit_tag(self, tag):
         self.indents += 1
         name = tag.name
-        if not self.hasCompiledTag:
-            if not self.hasCompiledDoctype and 'html' == name:
-                self.visitDoctype()
-            self.hasCompiledTag = True
+        if not self.has_compiled_tag:
+            if not self.has_compiled_doctype and 'html' == name:
+                self.visit_doctype()
+            self.has_compiled_tag = True
 
-        if self.pp and name not in self.inlineTags and not tag.inline:
+        if self.pp and name not in self.inline_tags and not tag.inline:
             self.buffer('\n' + '  ' * (self.indents - 1))
-        if name in self.inlineTags or tag.inline:
+        if name in self.inline_tags or tag.inline:
             self.instring = False
 
-        closed = name in self.selfClosing and not self.xml
+        closed = name in self.self_closing and not self.xml
         if tag.text:
             t = tag.text.nodes[0]
             if t.startswith(u'/'):
@@ -162,21 +162,21 @@ class Compiler(object):
             self.buffer('<' + self.interpolate(name))
         else:
             self.buffer('<%s' % name)
-        self.visitAttributes(tag.attrs)
+        self.visit_attributes(tag.attrs)
         self.buffer('/>' if not self.terse and closed else '>')
 
         if not closed:
             if tag.code:
-                self.visitCode(tag.code)
+                self.visit_code(tag.code)
             if tag.text:
                 self.buffer(self.interpolate(tag.text.nodes[0].lstrip()))
             self.escape = 'pre' == tag.name
             # empirically check if we only contain text
-            textOnly = tag.textOnly or not bool(len(tag.block.nodes))
+            text_only = tag.text_only or not bool(len(tag.block.nodes))
             self.instring = False
             self.visit(tag.block)
 
-            if self.pp and not name in self.inlineTags and not textOnly:
+            if self.pp and not name in self.inline_tags and not text_only:
                 self.buffer('\n' + '  ' * (self.indents - 1))
 
             if tag.buffer:
@@ -185,15 +185,15 @@ class Compiler(object):
                 self.buffer('</%s>' % name)
         self.indents -= 1
 
-    def visitFilter(self, filter):
+    def visit_filter(self, filter):
         if filter.name not in self.filters:
-            if filter.isASTFilter:
+            if filter.is_AST_filter:
                 raise Exception('unknown ast filter "%s"' % filter.name)
             else:
                 raise Exception('unknown filter "%s"' % filter.name)
 
         fn = self.filters.get(filter.name)
-        if filter.isASTFilter:
+        if filter.is_AST_filter:
             self.buf.append(fn(filter.block, self, filter.attrs))
         else:
             text = ''.join(filter.block.nodes)
@@ -222,28 +222,28 @@ class Compiler(object):
                 filter_string + self.variable_end_string
         return self.RE_INTERPOLATE.sub(repl, text)
 
-    def visitText(self, text):
+    def visit_text(self, text):
         text = ''.join(text.nodes)
         text = self.interpolate(text)
         self.buffer(text)
         if self.pp:
             self.buffer('\n')
 
-    def visitString(self, text):
+    def visit_string(self, text):
         instring = not text.inline
         text = ''.join(text.nodes)
         text = self.interpolate(text)
         self.buffer(text)
         self.instring = instring
 
-    def visitComment(self, comment):
+    def visit_comment(self, comment):
         if not comment.buffer:
             return
         if self.pp:
             self.buffer('\n' + '  ' * (self.indents))
         self.buffer('<!--%s-->' % comment.val)
 
-    def visitAssignment(self, assignment):
+    def visit_assignment(self, assignment):
         self.buffer('{%% set %s = %s %%}' % (assignment.name, assignment.val))
 
     def format_path(self, path):
@@ -252,47 +252,47 @@ class Compiler(object):
             path += self.extension
         return path
 
-    def visitExtends(self, node):
+    def visit_extends(self, node):
         path = self.format_path(node.path)
         self.buffer('{%% extends "%s" %%}' % (path))
 
-    def visitInclude(self, node):
+    def visit_include(self, node):
         path = self.format_path(node.path)
         self.buffer('{%% include "%s" %%}' % (path))
 
-    def visitBlockComment(self, comment):
+    def visit_blockcomment(self, comment):
         if not comment.buffer:
             return
-        isConditional = comment.val.strip().startswith('if')
-        self.buffer('<!--[%s]>' % comment.val.strip() if isConditional else '<!--%s' % comment.val)
+        is_conditional = comment.val.strip().startswith('if')
+        self.buffer('<!--[%s]>' % comment.val.strip() if is_conditional else '<!--%s' % comment.val)
         self.visit(comment.block)
-        self.buffer('<![endif]-->' if isConditional else '-->')
+        self.buffer('<![endif]-->' if is_conditional else '-->')
 
-    def visitConditional(self, conditional):
-        TYPE_CODE = {
+    def visit_conditional(self, conditional):
+        type_code = {
             'if': lambda x: 'if %s' % x,
             'unless': lambda x: 'if not %s' % x,
             'elif': lambda x: 'elif %s' % x,
             'else': lambda x: 'else'
         }
-        self.buf.append('{%% %s %%}' % TYPE_CODE[conditional.type](conditional.sentence))
+        self.buf.append('{%% %s %%}' % type_code[conditional.type](conditional.sentence))
         if conditional.block:
             self.visit(conditional.block)
             for next in conditional.next:
-                self.visitConditional(next)
+                self.visit_conditional(next)
         if conditional.type in ['if', 'unless']:
             self.buf.append('{% endif %}')
 
-    def visitVar(self, var, escape=False):
+    def visit_var(self, var, escape=False):
         var = self.var_processor(var)
         return ('%s%s%s%s' % (self.variable_start_string, var,
                               '|escape' if escape else '', self.variable_end_string))
 
-    def visitCode(self, code):
+    def visit_code(self, code):
         if code.buffer:
             val = code.val.lstrip()
 
-            self.buf.append(self.visitVar(val, code.escape))
+            self.buf.append(self.visit_var(val, code.escape))
         else:
             self.buf.append('{%% %s %%}' % code.val)
 
@@ -302,11 +302,11 @@ class Compiler(object):
             # if not code.buffer: self.buf.append('}')
 
             if not code.buffer:
-                codeTag = code.val.strip().split(' ', 1)[0]
-                if codeTag in self.autocloseCode:
-                    self.buf.append('{%% end%s %%}' % codeTag)
+                code_tag = code.val.strip().split(' ', 1)[0]
+                if code_tag in self.autoclose_code:
+                    self.buf.append('{%% end%s %%}' % code_tag)
 
-    def visitEach(self, each):
+    def visit_each(self, each):
         self.buf.append('{%% for %s in %s|__pypugjs_iter:%d %%}' % (','.join(each.keys), each.obj, len(each.keys)))
         self.visit(each.block)
         self.buf.append('{% endfor %}')
@@ -314,7 +314,7 @@ class Compiler(object):
     def attributes(self, attrs):
         return "%s__pypugjs_attrs(%s)%s" % (self.variable_start_string, attrs, self.variable_end_string)
 
-    def visitDynamicAttributes(self, attrs):
+    def visit_dynamic_attributes(self, attrs):
         buf, classes, params = [], [], {}
         terse = 'terse=True' if self.terse else ''
         for attr in attrs:
@@ -337,19 +337,19 @@ class Compiler(object):
         if buf or terse:
             self.buf.append(self.attributes(param_string))
 
-    def visitAttributes(self, attrs):
+    def visit_attributes(self, attrs):
         temp_attrs = []
         for attr in attrs:
-            if (not self.useRuntime and not attr['name'] == 'class') or attr['static']:
+            if (not self.use_runtime and not attr['name'] == 'class') or attr['static']:
                 if temp_attrs:
-                    self.visitDynamicAttributes(temp_attrs)
+                    self.visit_dynamic_attributes(temp_attrs)
                     temp_attrs = []
                 n, v = attr['name'], attr['val']
                 if isinstance(v, six.string_types):
-                    if self.useRuntime or attr['static']:
+                    if self.use_runtime or attr['static']:
                         self.buf.append(' %s=%s' % (n, v))
                     else:
-                        self.buf.append(' %s="%s"' % (n, self.visitVar(v)))
+                        self.buf.append(' %s="%s"' % (n, self.visit_var(v)))
                 elif v is True:
                     if self.terse:
                         self.buf.append(' %s' % (n,))
@@ -359,7 +359,7 @@ class Compiler(object):
                 temp_attrs.append(attr)
 
         if temp_attrs:
-            self.visitDynamicAttributes(temp_attrs)
+            self.visit_dynamic_attributes(temp_attrs)
 
     @classmethod
     def register_filter(cls, name, f):
@@ -367,7 +367,7 @@ class Compiler(object):
 
     @classmethod
     def register_autoclosecode(cls, name):
-        cls.autocloseCode.append(name)
+        cls.autoclose_code.append(name)
 
 
 # 1-

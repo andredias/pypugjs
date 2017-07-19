@@ -56,7 +56,7 @@ def convert_file():
         else:
             template = codecs.getreader('utf-8')(sys.stdin).read()
         output = process(template, compiler=available_compilers[compiler],
-                         staticAttrs=True, extension=extension)
+                         static_attrs=True, extension=extension)
         if file_output:
             outfile = codecs.open(file_output, 'w', encoding='utf-8')
             outfile.write(output)

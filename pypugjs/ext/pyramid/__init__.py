@@ -16,10 +16,10 @@ class PyPugJSRenderer(object):
 
     def __init__(self, info):
         info.settings['mako.preprocessor'] = preprocessor
-        self.makoRenderer = mako_templating.renderer_factory(info)
+        self.mako_renderer = mako_templating.renderer_factory(info)
 
     def __call__(self, value, system):
-        return self.makoRenderer(value, system)
+        return self.mako_renderer(value, system)
 
 
 def add_pugjs_renderer(config, extension, mako_settings_prefix='mako.'):

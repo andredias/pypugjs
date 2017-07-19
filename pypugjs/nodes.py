@@ -32,7 +32,7 @@ class Block(Node):
     def prepend(self, node):
         return self.nodes.appendleft(node)
 
-    def isEmpty(self):
+    def is_empty(self):
         return bool(self.nodes)
 
     def unshift(self, node):
@@ -119,7 +119,7 @@ class Filter(Node):
         self.name = name
         self.block = block
         self.attrs = attrs
-        self.isASTFilter = isinstance(block, Block)
+        self.is_AST_filter = isinstance(block, Block)
 
 
 class Literal(Node):
@@ -130,7 +130,7 @@ class Literal(Node):
 class Tag(Node):
     def __init__(self, name, block=None, inline=False, buffer=False):
         self.name = name
-        self.textOnly = False
+        self.text_only = False
         self.code = None
         self.text = None
         self._attrs = []
@@ -139,7 +139,7 @@ class Tag(Node):
         self.buffer = buffer
 
     @classmethod
-    def static(self, string, only_remove=False):
+    def static(cls, string, only_remove=False):
         if not isinstance(string, six.string_types) or not string:
             return string
         if string[0] in ('"', "'"):
@@ -151,16 +151,16 @@ class Tag(Node):
             return string
         return '"%s"' % string
 
-    def setAttribute(self, name, val, static=True):
+    def set_attribute(self, name, val, static=True):
         self._attrs.append(dict(name=name, val=val, static=static))
         return self
 
-    def removeAttribute(self, name):
+    def remove_attribute(self, name):
         for attr in self._attrs:
             if attr and attr['name'] == name:
                 self._attrs.remove(attr)
 
-    def getAttribute(self, name):
+    def get_attribute(self, name):
         for attr in self._attrs:
             if attr and attr['name'] == name:
                 return attr['val']

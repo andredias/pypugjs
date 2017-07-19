@@ -20,10 +20,10 @@ class Compiler(_Compiler):
         _Compiler.__init__(self, *args, **kws)
         self._i = count()
 
-    def visitAssignment(self, assignment):
+    def visit_assignment(self, assignment):
         self.buffer('<%% var %s = %s; %%>' % (assignment.name, assignment.val))
 
-    def visitCode(self, code):
+    def visit_code(self, code):
         if code.buffer:
             val = code.val.lstrip()
             self.buf.append('<%%%s %s %%>' % ('=' if code.escape else '-', val))
@@ -37,13 +37,13 @@ class Compiler(_Compiler):
             # if not code.buffer: self.buf.append('}')
 
             if not code.buffer:
-                codeTag = code.val.strip().split(' ', 1)[0]
-                if codeTag in self.autocloseCode:
+                code_tag = code.val.strip().split(' ', 1)[0]
+                if code_tag in self.autoclose_code:
                     self.buf.append('<% } %>')
         elif not code.buffer:
             self.buf.append('; %>')  # for loop
 
-    def visitEach(self, each):
+    def visit_each(self, each):
         #self.buf.append('{%% for %s in %s %%}'%(','.join(each.keys),each.obj))
         __i = self._i.next()
         self.buf.append(
@@ -77,7 +77,7 @@ class Compiler(_Compiler):
         else:
             return attr['name']
 
-    def visitAttributes(self, attrs):
+    def visit_attributes(self, attrs):
         classes = []
         params = []
         for attr in attrs:
@@ -97,18 +97,18 @@ class Compiler(_Compiler):
         if params:
             self.buf.append(" " + " ".join([process_param(k, v, self.terse) for (k, v) in params]))
 
-    def visitConditional(self, conditional):
-        TYPE_CODE = {
+    def visit_conditional(self, conditional):
+        type_code = {
             'if': lambda x: 'if (%s)' % x,
             'unless': lambda x: 'if (!%s)' % x,
             'elif': lambda x: '} else if (%s)' % x,
             'else': lambda x: '} else'
         }
-        self.buf.append('\n<%% %s { %%>' % TYPE_CODE[conditional.type](conditional.sentence))
+        self.buf.append('\n<%% %s { %%>' % type_code[conditional.type](conditional.sentence))
         if conditional.block:
             self.visit(conditional.block)
             for next in conditional.next:
-                self.visitConditional(next)
+                self.visit_conditional(next)
         if conditional.type in ['if', 'unless']:
             self.buf.append('\n<% } %>\n')
 

@@ -18,7 +18,7 @@ def attrs(attrs, terse=False):
 
 class Compiler(_Compiler):
 
-    def visitCodeBlock(self, block):
+    def visit_codeblock(self, block):
         if self.mixing > 0:
             if self.mixing > 1:
                 caller_name = '__pypugjs_caller_%d' % self.mixing
@@ -30,31 +30,31 @@ class Compiler(_Compiler):
             self.buffer('{%% block %s %%}' % block.name)
             if block.mode == 'append':
                 self.buffer('%ssuper()%s' % (self.variable_start_string, self.variable_end_string))
-            self.visitBlock(block)
+            self.visit_block(block)
             if block.mode == 'prepend':
                 self.buffer('%ssuper()%s' % (self.variable_start_string, self.variable_end_string))
             self.buffer('{% endblock %}')
 
-    def visitMixin(self, mixin):
+    def visit_mixin(self, mixin):
         self.mixing += 1
         if not mixin.call:
             self.buffer('{%% macro %s(%s) %%}' % (mixin.name, mixin.args))
-            self.visitBlock(mixin.block)
+            self.visit_block(mixin.block)
             self.buffer('{% endmacro %}')
         elif mixin.block:
             if self.mixing > 1:
                 self.buffer('{%% set __pypugjs_caller_%d=caller %%}' % self.mixing)
             self.buffer('{%% call %s(%s) %%}' % (mixin.name, mixin.args))
-            self.visitBlock(mixin.block)
+            self.visit_block(mixin.block)
             self.buffer('{% endcall %}')
         else:
             self.buffer('%s%s(%s)%s' % (self.variable_start_string, mixin.name, mixin.args, self.variable_end_string))
         self.mixing -= 1
 
-    def visitAssignment(self, assignment):
+    def visit_assignment(self, assignment):
         self.buffer('{%% set %s = %s %%}' % (assignment.name, assignment.val))
 
-    def visitCode(self, code):
+    def visit_code(self, code):
         if code.buffer:
             val = code.val.lstrip()
             val = self.var_processor(val)
@@ -69,11 +69,11 @@ class Compiler(_Compiler):
             # if not code.buffer: self.buf.append('}')
 
             if not code.buffer:
-                codeTag = code.val.strip().split(' ', 1)[0]
-                if codeTag in self.autocloseCode:
-                    self.buf.append('{%% end%s %%}' % codeTag)
+                code_tag = code.val.strip().split(' ', 1)[0]
+                if code_tag in self.autoclose_code:
+                    self.buf.append('{%% end%s %%}' % code_tag)
 
-    def visitEach(self, each):
+    def visit_each(self, each):
         self.buf.append("{%% for %s in %s(%s,%d) %%}" % (','.join(each.keys), ITER_FUNC, each.obj, len(each.keys)))
         self.visit(each.block)
         self.buf.append('{% endfor %}')
