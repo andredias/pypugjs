@@ -6,7 +6,6 @@ except:
 from copy import deepcopy
 import six
 
-from .compiler import Compiler
 
 missing = object()
 

@@ -3,7 +3,7 @@
 import contextlib
 
 import pypugjs
-from pypugjs.runtime import is_mapping, iteration, escape
+from pypugjs.runtime import iteration, escape
 import six
 import os
 import operator

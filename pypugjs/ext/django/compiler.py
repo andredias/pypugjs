@@ -1,8 +1,4 @@
-import logging
-import os
-
-from pypugjs import Compiler as _Compiler, Parser, register_filter
-from pypugjs.runtime import attrs
+from pypugjs import Compiler as _Compiler, register_filter
 from pypugjs.exceptions import CurrentlyNotSupported
 from pypugjs.utils import process
 

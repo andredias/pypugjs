@@ -1,6 +1,5 @@
 from __future__ import absolute_import
-from .utils import odict
-import types
+
 import six
 from itertools import chain
 
@@ -57,10 +56,10 @@ def attrs(attrs=[], terse=False, undefined=None):
         for k, v in attrs:
             if undefined is not None and isinstance(v, undefined):
                 continue
-            if v is not None and (v != False or not isinstance(v, bool)):
+            if v is not None and (v is not False or not isinstance(v, bool)):
                 if k == 'class' and isinstance(v, (list, tuple)):
                     v = u' '.join(map(str, flatten(v)))
-                t = v == True and isinstance(v, bool)
+                t = v is True and isinstance(v, bool)
                 if t and not terse:
                     v = k
                 buf.append(u'%s' % k if terse and t else u'%s="%s"' % (k, escape(v)))

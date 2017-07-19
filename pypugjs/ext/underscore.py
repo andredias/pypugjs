@@ -1,8 +1,6 @@
-import os
 from itertools import count
-from pypugjs import Parser, Compiler as _Compiler
-from pypugjs.runtime import attrs
-from pypugjs.utils import process
+from pypugjs import Compiler as _Compiler
+
 import six
 
 
@@ -44,7 +42,7 @@ class Compiler(_Compiler):
             self.buf.append('; %>')  # for loop
 
     def visit_each(self, each):
-        #self.buf.append('{%% for %s in %s %%}'%(','.join(each.keys),each.obj))
+        # self.buf.append('{%% for %s in %s %%}'%(','.join(each.keys),each.obj))
         __i = self._i.next()
         self.buf.append(
             '<%% for (_i_%s = 0, _len_%s = %s.length; _i_%s < _len_%s; _i_%s++) { ' %

@@ -1,6 +1,5 @@
 from jinja2.ext import Extension
 import os
-import pypugjs.runtime
 
 from pypugjs import Compiler as _Compiler
 from pypugjs.runtime import attrs as _attrs, iteration

@@ -197,12 +197,11 @@ def test_case_generator():
     global processors
 
     import os
-    import sys
     for dirname, dirnames, filenames in os.walk('cases/'):
         # raise Exception(filenames)
         filenames = filter(lambda x: x.endswith('.pug'), filenames)
         filenames = list(map(lambda x: x.replace('.pug', ''), filenames))
         for processor in processors.keys():
             for filename in filenames:
-                if not filename in exclusions[processor]:
+                if filename not in exclusions[processor]:
                     yield run_case, filename, processor

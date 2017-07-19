@@ -1,7 +1,4 @@
-import os
-import sys
-
-from pypugjs import Parser, Compiler as _Compiler
+from pypugjs import Compiler as _Compiler
 from pypugjs.runtime import attrs as _attrs
 from pypugjs.utils import process
 ATTRS_FUNC = '__pypugjs_attrs'

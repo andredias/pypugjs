@@ -176,7 +176,7 @@ class Compiler(object):
             self.instring = False
             self.visit(tag.block)
 
-            if self.pp and not name in self.inline_tags and not text_only:
+            if self.pp and name not in self.inline_tags and not text_only:
                 self.buffer('\n' + '  ' * (self.indents - 1))
 
             if tag.buffer:

@@ -297,8 +297,6 @@ class Parser(object):
         tok = self.advance()
         tag = nodes.Tag(tok.val, buffer=tok.val[0] == '#')
         tag.inline_level = tok.inline_level
-        dot = None
-
         tag.line = self.line()
 
         while True:
@@ -317,7 +315,7 @@ class Parser(object):
 
         v = self.peek().val
         if '.' == v:
-            dot = tag.text_only = True
+            tag.text_only = True
             self.advance()
         elif '<' == v:  # For inline elements
             tag.inline = True

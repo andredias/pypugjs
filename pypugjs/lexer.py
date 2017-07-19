@@ -459,7 +459,6 @@ class Lexer(object):
             index = self.index_of_delimiters('(', ')')
             string = self.input[1:index]
             tok = self.tok('attrs')
-            l = len(string)
             colons = self.colons
             states = ['key']
 
@@ -678,7 +677,7 @@ class Lexer(object):
             or self.colon() \
             or self.string() \
             or self.text()
-            # or self._while() \
+        # or self._while() \
 
 
 class InlineLexer(Lexer):
